@@ -4,7 +4,7 @@
 # Author: Morris Bernstein (morris@systems-deployment.com)
 
 import sys
-import decorators_01
+import mydecorators
 
 class Node(object):
 
@@ -14,7 +14,7 @@ class Node(object):
         self.left = left
         self.right = right
 
-    @decorators_01.depth
+    @mydecorators.depth_1
     def insert(self, data):
         if data < self.data:
             if self.left:
@@ -29,7 +29,7 @@ class Node(object):
         else:
             self.count += 1
 
-    @decorators_01.depth
+    @mydecorators.depth_1
     def inorder(self, fn):
         if self.left:
             self.left.inorder(fn)
