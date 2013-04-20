@@ -1,8 +1,8 @@
-/*
+"""
 Database Helper
 Author: Heather Hoaglund-Biron
-*/
 
+"""
 import sqlite3
 
 class DatabaseHelper:

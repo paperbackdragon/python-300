@@ -1,8 +1,9 @@
-/*
+"""
 MP3 Tag Reader
 Author: Heather Hoaglund-Biron
-*/
 
+"""
+import mutagen
 from mutagen.easyid3 import EasyID3
 
 class TagReader:
@@ -18,6 +19,9 @@ class TagReader:
         files' metadata, and returns it in a dict object.
 
         """
+        files = find(top_dir)
+        tags = read(files)
+        return tags
 
     def find(self, top_dir):
         """
@@ -25,6 +29,7 @@ class TagReader:
         returns an array of files.
 
         """
+        return 
 
     def read(self, music_file):
         """
@@ -32,4 +37,5 @@ class TagReader:
         containing the metadata.
 
         """
-
+        musicFile = EasyID3.Open(music_file)
+    

@@ -1,12 +1,12 @@
-/*
+"""
 Treader - A GUI-based MP3 Tag Reader
 Author: Heather Hoaglund-Biron
-*/
 
+"""
 from multiprocessing import Process
 import Tkinter
-import dbhelper.DatabaseHelper as DatabaseHelper
-import tagreader.TagReader as TagReader
+import dbhelper
+import tagreader
 
 class Application(Frame):
     def __init__(self, master=None):
