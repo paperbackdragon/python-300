@@ -7,7 +7,9 @@ import sqlite3
 
 class DatabaseHelper:
     """
-    A DatabaseHelper reads and writes MP3 metadata to an SQLite database.
+    A DatabaseHelper reads and writes MP3 metadata to an SQLite database. It is
+    necessary to close the connection to the database when finished with the
+    close() method.
 
     """
 
@@ -16,12 +18,51 @@ class DatabaseHelper:
         Initializes the MP3 metadata database.
 
         """
+        self.conn = sqlite3.connect('tags.db')
+        self.c = self.conn.cursor()
+        
+        #Create table
+        self.c.execute("""CREATE TABLE IF NOT EXISTS songs
+                          (title TEXT NOT NULL,
+                           album TEXT NOT NULL,
+                           artist TEXT,
+                           track INTEGER,
+                           length TEXT,
+                           PRIMARY KEY (title, album))""")
+        
+        #Commit changes
+        self.conn.commit()
 
     def write(self, data):
         """
         Takes the given data and writes it to the database.
 
         """
+        print(data)
+        insert_text = "INSERT into songs (title, album"
+        columns = ['title', 'album', 'artist', 'track', 'length']
+        used = ['title', 'album']
+        
+        #See which tags are in the dictionary (title and album aren't optional)
+        for column in columns[2:]:
+            if column in data:
+                insert_text += ", " + column
+                used.append(column)
+        insert_text += ") values ("
+
+        #Prepare values
+        values = []
+        for column in used:
+            if column == "track":
+                values.append(data[column])
+            else:
+                values.append("\"" + data[column] + "\"")
+        insert_text += ", ".join(values)
+        insert_text += ")"
+
+        #Execute command(s) and commit
+        self.c.execute(insert_text)
+        self.conn.commit()
 
     def read(self, query):
         """
@@ -29,4 +70,7 @@ class DatabaseHelper:
         the database, and returns it.
 
         """
+
+    def close(self):
+        self.conn.close()
 

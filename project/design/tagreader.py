@@ -4,8 +4,6 @@ Author: Heather Hoaglund-Biron
 
 """
 from mutagen.easyid3 import EasyID3
-import fnmatch
-import os
 
 class TagReader:
     """
@@ -20,9 +18,6 @@ class TagReader:
         files' metadata, and returns it in a list of dictionaries.
 
         """
-        files = self._find(topdir)
-        tags = self._read(files)
-        return tags
 
     def _find(self, topdir):
         """
@@ -30,12 +25,6 @@ class TagReader:
         returns an array of filenames.
 
         """
-        matches = []
-        for root, dirnames, filenames in os.walk(topdir):
-            for filename in fnmatch.filter(filenames, '*.mp3'):
-                matches.append(os.path.join(root, filename))
-        
-        return matches
 
     def _read(self, musicfiles):
         """
@@ -43,16 +32,4 @@ class TagReader:
         dictionaries cotaining the metadata for each file.
 
         """
-        metadata = []
-        for mp3 in musicfiles:
-            filedict = {}
-            musicfile = EasyID3(mp3)
-            keys = ['title', 'artist']
-            
-            #Store each key, value pair in the file's dictionary
-            for key in keys:
-                filedict[key] = ', '.join(musicfile[key])
-            
-            metadata.append(filedict)
-        return metadata
     
