@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=1024, user-scalable=no">
+
+	<title>Isilon Advanced Python Week 6 : Advanced OO</title>
+	
+	<!-- Required stylesheet -->
+	<link rel="stylesheet" href="core/deck.core.css">
+	
+	<!-- Extension CSS files go here. Remove or add as needed. -->
+	<link rel="stylesheet" href="extensions/goto/deck.goto.css">
+	<link rel="stylesheet" href="extensions/menu/deck.menu.css">
+	<link rel="stylesheet" href="extensions/navigation/deck.navigation.css">
+	<link rel="stylesheet" href="extensions/status/deck.status.css">
+	<link rel="stylesheet" href="extensions/hash/deck.hash.css">
+	<link rel="stylesheet" href="extensions/scale/deck.scale.css">
+
+	<!-- Style theme. More available in /themes/style/ or create your own. -->
+    <!-- default
+	<link rel="stylesheet" href="themes/style/neon.css">
+    -->
+	<link rel="stylesheet" href="themes/style/web-2.0.css">
+
+	
+	<!-- Transition theme. More available in /themes/transition/ or create your own. -->
+    <!--
+	<link rel="stylesheet" href="themes/transition/fade.css">
+    -->
+	<link rel="stylesheet" href="themes/transition/horizontal-slide.css">
+	
+	<!-- Required Modernizr file -->
+	<script src="modernizr.custom.js"></script>
+</head>
+<body class="deck-container">
+
+<!-- Begin slides. Just make elements with a class of slide. -->
+
+<section class="slide">
+	<h2>Advanced OO in Python</h2>
+    <p>May 7, 2013</p>
+    <p>Joseph Sheedy</p>
+    <p><i>joseph@velotronheavyindustries.com</i></p>
+    <p>Git repository:  <a href="https://github.com/jsheedy/2013-UW-python-training/" target="_blank">https://github.com/jsheedy/2013-UW-python-training/</a></p>
+</section>
+
+<section class="slide">
+	<h2>Today's topics</h2>
+    <ul>
+        <li>Review of @decorators</li>
+        <li>Review of debugging</li>
+        <li>Python class styles</li>
+        <li>Inheritance</li>
+        <li>Multiple inheritance and the Diamond Problem
+        <li>__init__ and super()
+        <li>Properties</li>
+        <li>metaclasses</li>
+    </ul>
+
+</section>
+
+<section class="slide">
+	<h2>@decorators</h2>
+    <p>decorators are functions that take other functions as arguments in order to wrap them with common functionality.</p>
+    <p>Some common use cases:
+    <ul>
+        <li>Error handling
+        <li>Authentication
+        <li>Logging
+        <li>Adding functionality to existing functions without subclassing
+    </ul>
+</section>
+
+<section class="slide">
+	<h2>@decorators in action</h2>
+    <p>Decorators are possible because of Python's first class functions and closures.</p>
+
+    <p>Anatomy of a decorator:
+    <pre>
+    <code>
+def shiny_decorator(func):
+    def _shiny_decorator(*args, **kwargs):
+        print "do stuff here"
+        func(*args, **kwargs)
+        print "and here"
+    return _shiny_decorator
+
+@shiny_decorator
+def my_function():
+    print "function payload here"
+
+# this is equivalent to
+def my_function():
+    print "function payload here"
+function = shiny_decorator(function)
+    </code>
+    </pre>
+    </p>
+    <p>Further reading</p>
+    <ul>
+        <li><a target="_blank" href="http://simeonfranklin.com/blog/2012/jul/1/python-decorators-in-12-steps/">http://simeonfranklin.com/blog/2012/jul/1/python-decorators-in-12-steps/</a></li>
+        <li><a target="_blank" href="http://www.thumbtack.com/engineering/a-primer-on-python-decorators/">http://www.thumbtack.com/engineering/a-primer-on-python-decorators/</a></li>
+        <li><a target="_blank" href="http://www.ibm.com/developerworks/linux/library/l-cpdecor/index.html">http://www.ibm.com/developerworks/linux/library/l-cpdecor/index.html</a></li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>He meant closures</h2>
+    <img src="../images/closures.jpg" />
+</section>
+
+<section class="slide">
+	<h2>@decorator arguments</h2>
+    <p>decorators can take arguments, with a little care</p>
+<pre>
+# functional equivalent without arguments:
+function = decorator(function)
+
+# With arguments:
+function = decorator(argument="Argument")(function)
+</pre>
+<pre><code>
+def shiny_decorator(func=None, **options):
+    if func != None:
+        # We received the function on this call, so we can define
+        # and return the inner function
+        log_level = options.get('log_level', 'INFO')
+        def inner(*args, **kwargs):
+            print "logging at level %s" % log_level
+            func(*args, **kwargs)
+        return inner
+    else:
+        def inner(func):
+            return shiny_decorator(func, **options)   
+        return inner
+
+@shiny_decorator()
+def my_function():
+    print "function payload here"
+
+@shiny_decorator(log_level="DEBUG")
+def my_function2():
+    print "function2 payload here"
+</code></pre>
+</section>
+
+<section class="slide">
+	<h2>Debugging Python</h2>
+    <h3>To IDE or not to IDE</h3>
+    <p>Debuggers are code which allows the inspection of state of other code during runtime.</p>
+
+    <p class="slide">Rudimentary tools
+        <ul class="slide">
+            <li>print()</li>
+            <li>import logging.debug</li>
+            <li>assert()</li>
+        </ul>
+    </p>
+
+    <p class="slide">Console debuggers</p>
+        <ul class="slide">
+            <li>pdb/ipdb</li>
+            <li>pudb <a href="https://pypi.python.org/pypi/pudb">https://pypi.python.org/pypi/pudb</a></li>
+        </ul>
+    </p>
+
+    <p class="slide">GUI debuggers</p>
+        <ul class="slide">
+            <li>Winpdb</li>
+            <li>Eclipse</li>
+            <li>Visual Studio</li>
+        </ul>
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Debugging with ipdb</h2>
+    <p>ipdb survival guide</p>
+<pre>
+<code>
+% python -m ipdb my_sweet_app.py
+ipdb> break my_sweet_app.py:4
+ipdb> break 1
+ipdb> clear 1
+ipdb> break # list breakpoints
+ipdb> list
+ipdb> return # execute until function returns
+ipdb> step
+ipdb> down # one level down the stack
+ipdb> up # one level up
+ipdb> where # print stack trace, aliased to bt
+ipdb> continue
+
+</code>
+</pre>
+</section>
+
+
+<section class="slide">
+    <h2>Debugging with Eclipse</h2>
+    <p>It can be more involved to set up, but GUI debuggers are easier to navigate for large applications</p>
+    <p>Maintains test configuration across runs</p>
+</section>
+
+<section class="slide">
+    <h2>End of decorators and debugging review</h2>
+    <h3>Questions?</h3>
+</section>
+
+<section class="slide">
+    <h2>Object Oriented programming in Python</h2>
+    <p>Object Oriented Programming (OOP) is a programming paradigm which encapsulates data and functions together in the form of objects</p> 
+    <ul>
+        <li>Old and new style classes</li>
+        <li>Interfaces</li>
+        <li>Multiple inheritance</li>
+        <li>@classmethods</li>
+        <li>object</li>
+        <li>super()</li>
+        <li>__init__</li>
+
+    </ul>
+</section>
+
+
+<section class="slide">
+    <h2>Old and New classes</h2>
+    <p>Python is an evolving language.   As of Python 2.2, we have old-style and new-style classes.  The distinction disappears in Python 3.  You
+    almost always want new-style classes.  super(), for instance, doesn't work with old-style classes.  To make a new-style class, derive from any other new-style class, or <i>object</i></p>
+    <p>New Style: everything is an object, including classes.  The Class of Class is a metaclass, which can be used to dynamically create a class</p>
+<pre>
+<code>
+class C(object):
+    def __init__(self):
+        # wham, new style class
+        pass
+
+</code>
+</pre>
+    <p>
+        <a target="_blank" href="http://www.python.org/doc/newstyle/">http://www.python.org/doc/newstyle/</a>
+        <br />
+        <a target="_blank" href="http://docs.python.org/2/reference/datamodel.html">http://docs.python.org/2/reference/datamodel.html</a>
+        <br />
+        <a target="_blank" href="http://stackoverflow.com/questions/54867/old-style-and-new-style-classes-in-python">http://stackoverflow.com/questions/54867/old-style-and-new-style-classes-in-python</a>
+    </p>
+</section>
+
+
+
+<section class="slide">
+    <h2>Defining Interfaces</h2>
+    <p>An interface defines a contract between different components</p>
+    <p>There's no strict definition of an interface in Python, but we can force implementation of methods</p>
+    <pre>
+    <code>
+class ExampleDataLayer():
+    """interface to the data layer"""
+    def write(data):
+        """writes data"""
+        raise NotImplementedError
+
+    def read(count):
+        """reads and returns count bytes"""
+        raise NotImplementedError
+
+    </code>
+    </pre>
+
+</section>
+
+<section class="slide">
+    <h2>Mixins</h2>
+    <ul>
+    <li>A common alternative to defining abstract interfaces is concrete mixin classes</li>
+    <li>Methods you want to pull in are already defined.  But in a complex hierarchy, be careful what you get </li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Multiple Inheritance and the Diamond Problem</h2>
+    <p>The order of inheritance affects the behavior of the class, so understanding method resolution order (MRO) is important</p>
+    <p>When calling a method on an object, Python first checks to see if the method name is defined in the class.  If not, it climbs up the class hierarchy until it either finds it or reaches the top without locating it, which will result in an AttributeError exception being thrown.</p>
+    <p>You can explicitly call the method as defined in a parent using super().</p>
+<pre>
+<code>
+class D(B, C):
+    def meth(self, arg):
+        super(D, self).meth(arg)
+</code>
+</pre>
+    <img src="../images/Diamond_inheritance.png" />
+
+</section>
+
+<section class="slide">
+    <h2>MRO</h2>
+    <p>The MRO of the previous diagram is [D,B,C,A], and is defined by the C3 linearization algorithm: <a target="_blank" href="http://en.wikipedia.org/wiki/C3_linearization">http://en.wikipedia.org/wiki/C3_linearization</a>
+    <p>Not so difficult for trivial examples, can lead to difficult bugs in complex hierarchies</p>
+    <p>
+        <a target="_blank" href="http://www.python.org/download/releases/2.2.2/descrintro/#mro">http://www.python.org/download/releases/2.2.2/descrintro/#mro</a>, the classic description of modern MRO by Guido.
+    </p>
+    <p>
+        <a target="_blank" href="http://www.python.org/download/releases/2.3/mro/">http://www.python.org/download/releases/2.3/mro/</a>
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Initialization</h2>
+    <p>An object is initialized after creation by the __init__ method.  It can accept arguments, which are passed to the class.</p>
+<pre>
+<code>
+from StringIO import StringIO
+class MyStringIO(StringIO):
+    def __init__(self, s):
+        super(MyStringIO, self).__init__(s)
+        self.write(s)
+</code>
+</pre>
+</section>
+
+<section class="slide">
+    <h2>Magic Methods</h2>
+    <p>They all start with and end with '__', and do things like support operators and comparisons, and provide handlers for the object lifecycle. </p>
+    <ul>
+        <li>__cmp__(self, other)
+        <li>__eq__(self, other)
+        <li>__add__(self, other)
+    </ul>
+    <p>Also, __call__, __str__, __repr__, __sizeof__, __setattr__, __getattr__, __len__, __iter__, __contains__, __lshift__, __rshift__, __xor__, __div__, __enter__, __exit__, and my personal favorite __rxor__(self,other)...... </p>
+    <p>The list is really long, it's mostly important to get a flavor of how they are used in Python so you can find and implement the right one when you need it.  See <a href="http://www.rafekettler.com/magicmethods.html">http://www.rafekettler.com/magicmethods.html</a> for more</p>
+</section>
+
+<section class="slide">
+    <h2>@classmethods</h2>
+    <p>Class methods receive the class as the first argument, not the instance.  This means it doesn't have access to instance variables.</p>
+<pre>
+<code>
+class MyClass(object):
+
+    @classmethod
+    def hello_class(cls):
+        print "hello from class %s" % str(cls)
+
+    def hello_instance(self):
+        print "hello from instance %s" % str(self)
+
+MyClass.hello_class()
+c = MyClass()
+c.hello_class()
+c.hello_instance()
+</code>
+</pre>
+
+</section>
+
+<section class="slide">
+    <h2>@properties</h2>
+    <p>A property is like a field with extra behavior defined behind the walls of the class</p>
+    <ul>
+        <li>Properties are generally read and written using getter and setter methods
+        <li>Useful for data validation and active updating, say storing a value in a database
+        <li>They require new-style classes!
+
+<pre>
+<code>
+class BankAccount(object):
+    def __init__(self, account_number):
+        # note that the actual field value is "hidden"
+        self._balance = 0.0
+        self.account_number = account_number
+
+    @property
+    def balance(self):
+        """getter"""
+        return self._balance
+
+    @balance.setter
+    def balance(self, value):
+        # record this transaction
+        print "set the value of account %(account_number)s to %(value)f" % \
+            {'account_number': self.account_number, 'value': value}
+        self._balance = value
+        
+</code>
+</pre>
+
+</section>
+
+<!--
+<section class="slide">
+    <h2>title</h2>
+    <p>text</p>
+</section>
+-->
+
+<section class="slide">
+    <h2>Lab work, enhance the BankAccount class</h2>
+    <p>
+        <ol>
+            <li>Add constraint to keep balance greater than or equal to 0.
+            <li>Add a deposit method.  
+            <li>Add a withdraw method.  
+            <li>Add a transfer method.  
+            <li>Debug transfer method using pdb.
+            <li>Add the magic methods __str__, __eq__, and __add__.  Extra credit for __rxor__.
+            <li>Create a new subclass, CheckingAccount.   Add a new method write_check() which uses methods defined in the parent class.
+            <li>Import the decorators we played with and integrate them into your new class
+        </ol>
+    </p>
+</section>
+
+<section class="slide">
+    <h2>One final resource</h2>
+    <p>The Python standard library is massive, become familiar with the documentation at <a target="_blank" href="http://docs.python.org/2/library/">http://docs.python.org/2/library/</a></p>
+    <p>Since a major part of the standard library is written in Python itself, it is an excellent resource for learning about Python design.   Find it on your system, or just download it from python.org.
+    Mine is at <a target="_blank" href="file:///System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/">file:///System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/</a></p>
+</section>
+
+<section class="slide">
+    <h1>Questions?</h1>
+</section>
+
+<!-- End slides. -->
+
+
+<!-- Begin extension snippets. Add or remove as needed. -->
+
+<!-- deck.navigation snippet -->
+<a href="#" class="deck-prev-link" title="Previous">&#8592;</a>
+<a href="#" class="deck-next-link" title="Next">&#8594;</a>
+
+<!-- deck.status snippet -->
+<p class="deck-status">
+	<span class="deck-status-current"></span>
+	/
+	<span class="deck-status-total"></span>
+</p>
+
+<!-- deck.goto snippet -->
+<form action="." method="get" class="goto-form">
+	<label for="goto-slide">Go to slide:</label>
+	<input type="text" name="slidenum" id="goto-slide" list="goto-datalist">
+	<datalist id="goto-datalist"></datalist>
+	<input type="submit" value="Go">
+</form>
+
+<!-- deck.hash snippet -->
+<a href="." title="Permalink to this slide" class="deck-permalink">#</a>
+
+<!-- End extension snippets. -->
+
+
+<!-- Required JS files. -->
+<script src="jquery-1.7.2.min.js"></script>
+<script src="core/deck.core.js"></script>
+
+<!-- Extension JS files. Add or remove as needed. -->
+<script src="core/deck.core.js"></script>
+<script src="extensions/hash/deck.hash.js"></script>
+<script src="extensions/menu/deck.menu.js"></script>
+<script src="extensions/goto/deck.goto.js"></script>
+<script src="extensions/status/deck.status.js"></script>
+<script src="extensions/navigation/deck.navigation.js"></script>
+<script src="extensions/scale/deck.scale.js"></script>
+
+<!-- Initialize the deck. You can put this in an external file if desired. -->
+<script>
+	$(function() {
+		$.deck('.slide');
+	});
+</script>
+</body>
+</html>

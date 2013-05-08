@@ -1,0 +1,89 @@
+Changelog
+=========
+
+0.7 (2012-07-06)
+----------------
+
+- Add ``launch_ipdb_on_exception`` context manager.
+  [Psycojoker]
+
+- Wrap sys.excepthook only once.
+  [marciomazza]
+
+- Add GPL file and refer in headers.
+  [stan3]
+
+- Python 3 support.
+  [Piet Delport]
+
+- Basic tests.
+  [msabramo]
+
+- Added the functions ``runcall``, ``runeval`` and ``run``.
+  [dimasad]
+
+
+0.6.1 (2011-10-17)
+------------------
+
+- State dependency on IPython later or equal to 0.10.
+  [gotcha]
+
+
+0.6 (2011-09-01)
+----------------
+
+- Add setuptools ``console_scripts`` entry point.
+  [akrito, gotcha] 
+
+- Nose support.
+  Closes https://github.com/gotcha/ipdb/issues/8
+  [akaihola, gotcha]
+
+
+0.5 (2011-08-05)
+----------------
+
+- IPython 0.11 support.
+  [lebedov]
+
+
+0.4 (2011-06-13)
+----------------
+
+- When used from IPython, use its colors.
+  Closes https://github.com/gotcha/ipdb/issues/1
+  [gotcha]
+
+- Fixed errors when exiting with "q". 
+  [gotcha]
+
+- Allow use of ``python -m ipdb mymodule.py``.
+  Python 2.7 only. 
+  Closes https://github.com/gotcha/ipdb/issues/3 
+  [gotcha]
+
+- Fixed post_mortem when the traceback is None.
+  [maurits]
+
+
+0.3 (2011-01-16)
+----------------
+
+- Add ``post_mortem()`` for ``Products.PDBDebugMode`` support.
+  [Jean Jordaan]
+
+- Moved to github.com.
+
+
+0.2 (2010-10-20)
+----------------
+
+- Added ``pm()``.
+  [Paulo Benedict Ang]
+
+
+0.1 (2010-04-26)
+----------------
+
+- First "non dev" release.

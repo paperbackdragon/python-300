@@ -1,0 +1,14 @@
+HISTORY.txt
+MANIFEST.in
+README.rst
+manual_test.py
+setup.cfg
+ipdb/__init__.py
+ipdb/__main__.py
+pip-egg-info/ipdb.egg-info/PKG-INFO
+pip-egg-info/ipdb.egg-info/SOURCES.txt
+pip-egg-info/ipdb.egg-info/dependency_links.txt
+pip-egg-info/ipdb.egg-info/entry_points.txt
+pip-egg-info/ipdb.egg-info/requires.txt
+pip-egg-info/ipdb.egg-info/top_level.txt
+pip-egg-info/ipdb.egg-info/zip-safe

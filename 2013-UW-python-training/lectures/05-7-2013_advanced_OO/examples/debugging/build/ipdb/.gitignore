@@ -1,0 +1,16 @@
+bin
+lib
+include
+
+# Python
+*.pyc
+/__pycache__/
+
+# setuptools / distribute
+/*.egg-info/
+/*.egg/
+/build/
+/dist/
+
+# tox
+.tox
