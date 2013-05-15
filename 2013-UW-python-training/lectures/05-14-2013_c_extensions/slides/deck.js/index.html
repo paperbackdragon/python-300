@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=1024, user-scalable=no">
+
+	<title>Isilon Advanced Python Week 7 : C extensions</title>
+	
+	<!-- Required stylesheet -->
+	<link rel="stylesheet" href="core/deck.core.css">
+	
+	<!-- Extension CSS files go here. Remove or add as needed. -->
+	<link rel="stylesheet" href="extensions/goto/deck.goto.css">
+	<link rel="stylesheet" href="extensions/menu/deck.menu.css">
+	<link rel="stylesheet" href="extensions/navigation/deck.navigation.css">
+	<link rel="stylesheet" href="extensions/status/deck.status.css">
+	<link rel="stylesheet" href="extensions/hash/deck.hash.css">
+	<link rel="stylesheet" href="extensions/scale/deck.scale.css">
+
+	<!-- Style theme. More available in /themes/style/ or create your own. -->
+    <!-- default
+	<link rel="stylesheet" href="themes/style/neon.css">
+    -->
+	<link rel="stylesheet" href="themes/style/web-2.0.css">
+
+	
+	<!-- Transition theme. More available in /themes/transition/ or create your own. -->
+    <!--
+	<link rel="stylesheet" href="themes/transition/fade.css">
+    -->
+	<link rel="stylesheet" href="themes/transition/horizontal-slide.css">
+	
+	<!-- Required Modernizr file -->
+	<script src="modernizr.custom.js"></script>
+</head>
+<body class="deck-container">
+
+<!-- Begin slides. Just make elements with a class of slide. -->
+
+<section class="slide">
+	<h2>C extensions in Python</h2>
+    <p>May 14, 2013</p>
+    <p>Joseph Sheedy</p>
+    <p><i>joseph@velotronheavyindustries.com</i></p>
+    <p>Git repository:  <a href="https://github.com/jsheedy/2013-UW-python-training/" target="_blank">https://github.com/jsheedy/2013-UW-python-training/</a></p>
+</section>
+
+<section class="slide">
+	<h2>C extensions in Python</h2>
+	<h3>Today's topics</h3>
+    <ul>
+        <li>Motivation and options</li>
+        <li>Python packaging tools</li>
+        <li>Extension modules (C API)</li>
+        <li>SWIG</li>
+        <li>ctypes</li>
+        <li>cython</li>
+        <li>others..</li>
+        <li>your projects</li>
+    </ul>
+
+</section>
+
+<section class="slide">
+	<h2>Motivations for exiting pure Python</h2>
+    <ul>
+        <li>Performance
+        <li>Integration with existing C libraries
+        <li>Working as a glue language
+        <li>Implement new builtin types
+    </ul>
+
+    <h3>Further reading</h3>
+    <ul>
+    <li><a target="_blank" href="http://docs.python.org/2/extending/extending.html">http://docs.python.org/2/extending/extending.html</a>
+    </ul>
+</section>
+
+<section class="slide">
+	<h2>Packaging your code</h2>
+    <p>Before we start building extensions, a quick look at building and packaging Python modules
+    <p>We'll wrap up our add() function into a distributable package
+<pre><code>
+def add(x, y):
+    return x+y
+</code></pre>
+</section>
+
+<section class="slide">
+	<h2>Packaging with Distutils</h2>
+    <ul>
+        <li>write a setup.py script
+<pre><code>
+from distutils.core import setup, Extension
+
+setup(
+    name='add',
+    version='1.0',
+    description='Test description',
+    ext_modules=[],
+    py_modules=['add'],
+)
+
+</code></pre>
+</li>
+<li><code>% python setup.py build</code>
+<li><code>% python setup.py sdist</code>
+</ul>
+    <p>Now your package is nicely wrapped up in build/, ready to distribute</p>
+</section>
+
+<section class="slide">
+    <h2>and of course, there other options</h2>
+    <p>Distutils isn't the only package for packaging, there is also setuptools, distribute, and distutils2</p>
+    <ul>
+        <li><a target="_blank" href="http://docs.python.org/2/distutils/introduction.html">http://docs.python.org/2/distutils/introduction.html</a>
+        <li><a target="_blank" href="http://peak.telecommunity.com/DevCenter/setuptools">http://peak.telecommunity.com/DevCenter/setuptools</a>
+        <li><a target="_blank" href="https://pypi.python.org/pypi/distribute">https://pypi.python.org/pypi/distribute</a>
+    </ul>
+    <p>distutils is the standard, works well until you need it to get complicated
+    <h3>Further reading</h3>
+    <ul>
+    <li><a target="_blank" href="http://stackoverflow.com/a/6522905/958118">http://stackoverflow.com/a/6522905/958118</a>
+    </ul>
+</section>
+
+<section class="slide">
+	<h2>Virtualenv</h2>
+    <p>Creates isolated Python environments, with just the packages and versions you want, independent of system-wide installation
+    <p>To create a new environment and start using it:
+<pre><code>
+% virtualenv /path/to/your/environment
+% . /path/to/your/environment/bin/activate
+</code></pre>
+
+    <p>Further reading</p>
+    <ul>
+        <li><a target="_blank" href="https://pypi.python.org/pypi/virtualenv">https://pypi.python.org/pypi/virtualenv</a>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>Example code used today</h2>
+    <p>To keep focus on the integration tools, we're going to focus on integrating the following the add() function into our Python application</p>
+<pre><code>
+#include &lt;stdio.h&gt;
+
+int add(int x, int y) {
+    return x+y;
+}
+
+int main(void) {
+    int w = 0;
+    int q = 2;
+    printf("test\n");
+    printf("%d", add(w,q));
+}
+</code></pre>
+
+</section>
+
+<section class="slide">
+    <h2>The pure C code</h2>
+    <ul>
+        <li>Create a Makefile:
+        <li><code>all: add; gcc -o add add.c</code>
+        <li><code>% make</code>
+        <li><code>./add</code>
+        <li><pre> 3 + 2 = 5</pre>
+    </ul>
+</section>
+
+
+<section class="slide">
+	<h2>The C API</h2>
+    <p>Write your function in pure C using the Python API and import it into Python</p>
+    <ul>
+        <li>Good for integrating with C library functions and system calls
+        <li>The API isn't trivial to learn
+        <li>Lots of opporunity for error, manual reference counting
+    </ul>
+    <p>Further reading</p>
+    <ul>
+        <li><a target="_blank" href="http://docs.python.org/2/extending/extending.html">http://docs.python.org/2/extending/extending.html</a>
+        <li><a target="_blank" href="http://hg.python.org/cpython/file/2145593d108d">Python 2.7 source code</a>
+    </ul>
+</section>
+
+<section class="slide">
+	<h2>SWIG</h2>
+    <h3>Simple Wrapper Interface and Generator</h3>
+    <p>A language agnostic tool for integrating C/C++ code with high level languages</p>
+    <p>Advantages
+    <ul>
+        <li>Code generation for other environments than Python.   Doesn't require modification to your C source.
+    </ul>
+    <h4>Language interfaces</h4>
+    <ul>
+        <li>Python
+        <li>Tcl
+        <li>Perl
+        <li>Guile (Scheme/Lisp)
+        <li>Java
+        <li>Ruby
+        <li>and a bunch of others <a target="_blank" href="http://www.swig.org/compat.html#SupportedLanguages">http://www.swig.org/compat.html#SupportedLanguages</a>
+    </ul>
+    <p>Further reading</p>
+    <ul>
+        <li><a target="_blank" href="http://www.swig.org/Doc1.3/Python.html">http://www.swig.org/Doc1.3/Python.html</a>
+    </ul>
+</section>
+
+<section class="slide">
+	<h2>SWIGifying add()</h2>
+    <ul>
+        <li>build add.i
+        <li>create distutils setup.py
+        <li>python setup.py build_ext -i
+    </ul>
+<h4>run it!</h4>
+<pre><code>python -c 'import add;print add.add(4,5)'</code></pre>
+</section>
+
+
+<section class="slide">
+	<h2>SWIGifying add(), not just for Python</h2>
+    <p>SWIG will create interfaces for all supported languages</p>
+    <ul>
+        <li>create extconf.rb
+        <li><code>ruby extconf.rb</code>
+        <li><code>swig -ruby add.i</code>
+        <li><code>make</code>
+        <li><code>ruby -e 'require "add"; print Add.add(5,6).to_s + "\n"'</code>
+    </ul>
+    <p>Further reading</p>
+    <ul>
+        <li><a target="_blank" href="http://www.swig.org/Doc1.3/Ruby.html">http://www.swig.org/Doc1.3/Ruby.html</a>
+    </ul>
+</section>
+
+<section class="slide">
+	<h2>ctypes</h2>
+    <p>A foreign function interface in Python</p>
+    <h3>Benefits</h3>
+    <ul>
+        <li>Ships with Python, since 2.5
+        <li>No new language to learn, it's all Python
+    </ul>
+    <h3>Drawbacks</h3>
+    <ul>
+        <li>Performance hit for on the fly type translation</li>
+    </ul>
+<pre><code>
+from ctypes import *
+add = cdll.LoadLibrary("add.so")
+print add.add(3,4)
+</code></pre>
+    <p>Further reading</p>
+    <ul>
+        <li><a target="_blank" href="http://docs.python.org/2/library/ctypes.html">http://docs.python.org/2/library/ctypes.html</a>
+    </ul>
+</section>
+
+
+<section class="slide">
+	<h2>Cython</h2>
+    <p>A Python like language with static types which compiles down to Python extensions written in C</p>
+<pre>
+<code>
+def add(int x, int y):
+    cdef int result=0
+    result = x + y
+    return result
+</code>
+</pre>
+
+    <p>Further reading</p>
+    <ul>
+        <li><a target="_blank" href="http://www.cython.org/">http://www.cython.org/</a>
+        <li><a target="_blank" href="http://docs.cython.org/">http://docs.cython.org/</a>
+    </ul>
+
+</section>
+
+<section class="slide">
+	<h2>Cython can compile pure Python code to C to provide a performance improvement</h2>
+    <p>Consider a more expensive function</p>
+<pre>
+<code>
+def f(x):
+    return x**2-x
+
+def integrate_f(a, b, N):
+    s = 0
+    dx = (b-a)/N
+    for i in range(N):
+        s += f(a+i*dx)
+    return s * dx
+
+
+</code>
+</pre>
+</section>
+
+<section class="slide">
+    <h2>Improvements with static typing</h2>
+    <ul>
+        <li>Convert the dynamically typed variables to static types and measure performance improvement before and after 
+        <li>Can static types and dynamic types be mixed?
+        <li>Check the performance in converting the function type to static (<a target="_blank" href="http://docs.cython.org/src/quickstart/cythonize.html#typing-functions">see here</a>)
+        <li>Use cython -a to compare the generated C code in all cases
+    </ul>
+<pre>
+<code>
+def f(x):
+    return x**2-x
+
+def integrate_f(a, b, N):
+    s = 0
+    dx = (b-a)/N
+    for i in range(N):
+        s += f(a+i*dx)
+    return s * dx
+
+
+</code>
+</pre>
+
+</section>
+
+<section class="slide">
+	<h2>Even more ways to integrate to C</h2>
+    <p>There are several other ways to integrate with C.   We say a passing hello to them.
+</section>
+
+<section class="slide">
+    <h2>Pyrex</h2>
+    <p><a target="_blank" href="http://wiki.python.org/moin/Pyrex">http://wiki.python.org/moin/Pyrex</a></p>
+    <p>Superceded by Cython</p>
+</section>
+
+<section class="slide">
+	<h2>SIP</h2>
+    <ul>
+        <li>Takes a specification file and generates the necessary C++ and Python modules
+        <li>Used to support large libraries like PyQT
+    </ul>
+    <p><a target="_blank" href="http://wiki.python.org/moin/SIP">http://wiki.python.org/moin/SIP</a>
+    <ul>
+        <li>
+    </ul>
+</section>
+
+
+<section class="slide">
+	<h2>Boost.Python</h2>
+    <p><a target="_blank" href="http://www.boost.org/doc/libs/1_41_0/libs/python/doc/index.html">http://www.boost.org/doc/libs/1_41_0/libs/python/doc/index.html</a></p>
+    <p>A C++ library which interfaces Python and C++</p>
+    <p>Wraps C++ functions in BOOST wrappers, compiled with your regular C++ compiler</p>
+</section>
+
+<section class="slide">
+    <h2>shedskin</h2>
+    <p><a target="_blank" href="https://code.google.com/p/shedskin/">https://code.google.com/p/shedskin/</a></p>
+    <p>A pure python compiler that makes type assumptions based on type inference</p>
+    <p>Experimental, but growing</p>
+</section>
+
+<section class="slide">
+    <h2>A few others</h2>
+    <p><a target="_blank" href="http://wiki.python.org/moin/IntegratingPythonWithOtherLanguages">http://wiki.python.org/moin/IntegratingPythonWithOtherLanguages</a></p>
+</section>
+
+<!--
+<section class="slide">
+    <h2>title</h2>
+    <p>text</p>
+</section>
+-->
+
+<section class="slide">
+    <h1>Questions?</h1>
+</section>
+
+<!-- End slides. -->
+
+
+<!-- Begin extension snippets. Add or remove as needed. -->
+
+<!-- deck.navigation snippet -->
+<a href="#" class="deck-prev-link" title="Previous">&#8592;</a>
+<a href="#" class="deck-next-link" title="Next">&#8594;</a>
+
+<!-- deck.status snippet -->
+<p class="deck-status">
+	<span class="deck-status-current"></span>
+	/
+	<span class="deck-status-total"></span>
+</p>
+
+<!-- deck.goto snippet -->
+<form action="." method="get" class="goto-form">
+	<label for="goto-slide">Go to slide:</label>
+	<input type="text" name="slidenum" id="goto-slide" list="goto-datalist">
+	<datalist id="goto-datalist"></datalist>
+	<input type="submit" value="Go">
+</form>
+
+<!-- deck.hash snippet -->
+<a href="." title="Permalink to this slide" class="deck-permalink">#</a>
+
+<!-- End extension snippets. -->
+
+
+<!-- Required JS files. -->
+<script src="jquery-1.7.2.min.js"></script>
+<script src="core/deck.core.js"></script>
+
+<!-- Extension JS files. Add or remove as needed. -->
+<script src="core/deck.core.js"></script>
+<script src="extensions/hash/deck.hash.js"></script>
+<script src="extensions/menu/deck.menu.js"></script>
+<script src="extensions/goto/deck.goto.js"></script>
+<script src="extensions/status/deck.status.js"></script>
+<script src="extensions/navigation/deck.navigation.js"></script>
+<script src="extensions/scale/deck.scale.js"></script>
+
+<!-- Initialize the deck. You can put this in an external file if desired. -->
+<script>
+	$(function() {
+		$.deck('.slide');
+	});
+</script>
+</body>
+</html>
