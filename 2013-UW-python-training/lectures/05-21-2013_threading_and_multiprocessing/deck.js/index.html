@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=1024, user-scalable=no">
+
+	<title>Isilon Advanced Python Week 8 : Threading and multiprocessing</title>
+	
+	<!-- Required stylesheet -->
+	<link rel="stylesheet" href="core/deck.core.css">
+	
+	<!-- Extension CSS files go here. Remove or add as needed. -->
+	<link rel="stylesheet" href="extensions/goto/deck.goto.css">
+	<link rel="stylesheet" href="extensions/menu/deck.menu.css">
+	<link rel="stylesheet" href="extensions/navigation/deck.navigation.css">
+	<link rel="stylesheet" href="extensions/status/deck.status.css">
+	<link rel="stylesheet" href="extensions/hash/deck.hash.css">
+	<link rel="stylesheet" href="extensions/scale/deck.scale.css">
+
+	<!-- Style theme. More available in /themes/style/ or create your own. -->
+    <!-- default
+	<link rel="stylesheet" href="themes/style/neon.css">
+    -->
+	<link rel="stylesheet" href="themes/style/web-2.0.css">
+
+	
+	<!-- Transition theme. More available in /themes/transition/ or create your own. -->
+    <!--
+	<link rel="stylesheet" href="themes/transition/fade.css">
+    -->
+	<link rel="stylesheet" href="themes/transition/horizontal-slide.css">
+	
+	<!-- Required Modernizr file -->
+	<script src="modernizr.custom.js"></script>
+</head>
+<body class="deck-container">
+
+
+<section class="slide">
+	<h2>threading and multiprocessing</h2>
+    <p>May 21, 2013</p>
+    <p>Joseph Sheedy</p>
+    <p><i>joseph@velotronheavyindustries.com</i></p>
+    <p>Git repository:  <a href="https://github.com/jsheedy/2013-UW-python-training/" target="_blank">https://github.com/jsheedy/2013-UW-python-training/</a></p>
+</section>
+
+<section class="slide">
+	<h2>Threading / multiprocessing</h2>
+	<h3>Today's topics</h3>
+    <ul>
+        <li>Review of argparse</li>
+        <li>Threading / multiprocessing motivation and options</li>
+        <li>threading module
+        <li>multiprocessing module
+        <li>other options
+        <li>your projects</li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>argparse</h2>
+    <p>A module for handling command line arguments like</p>
+    <p><code>% command.py arg1 --x 9 --y 10 </code></p>
+    <p>Command line arguments are accessible directly via sys.argv
+    <p>Manually parsing sys.argv gets difficult with optional parameters
+    <p>argparse is easy for simple cases, and possible for complex ones
+    <p>Features:</p>
+    <ul>
+        <li>position independent optional arguments
+        <li>type and range validation
+        <li>subcommands
+    </ul>
+<p><pre><code>
+# basic usage
+parser = argparse.ArgumentParser()
+parser.add_argument('x', type=int, help="x value")
+args = parser.parse_args()
+print args.x
+</code></pre></p>
+
+</section>
+<section class="slide">
+    <h2>argparse in action</h2>
+    <p>Add() is back, as a command line utility</p>
+<pre>
+<code>
+import argparse
+
+parser = argparse.ArgumentParser(description='add app')
+parser.add_argument('x', type=int, help='x value')
+parser.add_argument('y', type=int, help='y value')
+
+args = parser.parse_args()
+
+print args.x + args.y
+</code>
+</pre>
+</section>
+
+<section class="slide">
+    <h2>subcommands </h2>
+    <p>Split up functionality into subcommands
+    </p>
+<p><pre><code>
+import argparse
+
+parser = argparse.ArgumentParser(description='add app')
+subparsers = parser.add_subparsers(help='sub command')
+
+null_parser = subparsers.add_parser('null', help='null')
+
+echo_parser = subparsers.add_parser('echo', help='echo')
+echo_parser.add_argument('message', nargs='*', help='values')
+
+args = parser.parse_args()
+print vars(args).get('message', "null")
+</code></pre></p>
+</section>
+
+<section class="slide">
+    <h2>subcommands </h2>
+    <p>slightly more generalized math script with subcommands</p>
+<pre>
+<code>
+import argparse
+
+def add(x,y):
+    return x+y
+
+def double(x):
+    return 2*x
+
+def handle_sum(*args):
+    return sum(args)
+
+parser = argparse.ArgumentParser(description='add app')
+parser.add_argument('--verbose', '-v', action='store_true', help='verbose')
+
+subparsers = parser.add_subparsers(help='sub command')
+
+add_parser = subparsers.add_parser('add', help='add')
+add_parser.add_argument('x', type=float, nargs=2, help='values')
+add_parser.set_defaults(func=add)
+
+sum_parser = subparsers.add_parser('sum', help='sum')
+sum_parser.add_argument('x', type=float, nargs='+', help='values')
+sum_parser.set_defaults(func=handle_sum)
+
+double_parser = subparsers.add_parser('double', help='double')
+double_parser.add_argument('x', type=float, nargs=1, help='value')
+double_parser.set_defaults(func=double)
+
+args = parser.parse_args()
+if args.verbose:
+    print "executing command"
+
+print args.func(*(args.x))
+</code>
+</pre>
+</section>
+
+<section class="slide">
+    <h2>End of argparse overview</h2>
+    <p>This should cover most of your argument processing needs.  For more detailed usage:</p>
+    <a target="_blank" href="http://docs.python.org/2.7/library/argparse.html">http://docs.python.org/2.7/library/argparse.html</a>
+</section>
+
+<section class="slide">
+	<h2>Motivations for parallel execution</h2>
+    <ul>
+        <li>Performance
+        <li>Event handling, network applications and user interfaces
+    </ul>
+
+</section>
+
+<section class="slide">
+	<h2>Parallelization strategy</h2>
+    <ol>
+        <li>Break problem down into chunks
+        <li>Execute chunks in parallel
+        <li>Reassemble output of chunks into result
+    </ol>
+    <img width="500" src="../images/OPP.0108.gif" />
+</section>
+
+<section class="slide">
+	<h2>Parallelization strategy</h2>
+    <p>
+        <ul>
+            <li>Not every problem is parallelizable
+            <li>There is an optimal number of threads for each problem in each environment, so make it tunable.
+            <li>Working concurrently opens up a Pandora's box of synchronization issues
+            <li>To help with those, we have locks, queue
+        </ul>
+    </p>
+</section>
+
+<section class="slide">
+    <h2>Threads versus processes in Python</h2>
+    <h3>Processes</h3>
+    <p>processes are independent environments managed by the OS
+    <p>Communication between processes via multiprocessing.Queue, multiprocessing.Pipe, and regular IPC</p>
+    <p>processes require multiple copies of the data, or expensive IPC to access it</p>
+
+    <h3>Threads</h3>
+    <p>Threads are lightweight processes
+    <p>Threads share the address space of the parent process.  This allows
+    access to data in the same scope</p>
+    <p>Python threads are true OS level threads</p>
+    <p>Threads can not gain the performance advantage of multiple processors due to the GIL</p>
+    <p>But the GIL is released during IO, allowing IO bound processes to benefit from threading</p>
+
+</section>
+
+<section class="slide">
+    <h2>GIL</h2>
+    <h3>Global Interpreter Lock</h3>
+    <p>This is a lock which must be obtained by each thread before it can execute, ensuring thread safety</p>
+    <p>The GIL is released during IO operations, so threads which spend time waiting on network or disk access can 
+    enjoy performance gains</p>
+    <p>Launch multiple processes to speed up CPU bound operations.  Luckily, this is easy with the multiprocessing module.</p>
+
+    <ul>
+        <li><a href="_blank" href="http://wiki.python.org/moin/GlobalInterpreterLock">http://wiki.python.org/moin/GlobalInterpreterLock</a></li>
+        <li><a href="_blank" href="http://docs.python.org/2/c-api/init.html#threads">http://docs.python.org/2/c-api/init.html#threads</a></li>
+    </ul>
+</section>
+
+<section class="slide">
+    <h2>posted without comment</h2>
+    <img width="500" src="../images/killGIL.jpg" />
+</section>
+
+<section class="slide">
+    <h2>A real CPU bound problem</h2>
+
+    <p>
+        Numerically integrate the function
+        <a target="_blank" href="http://www.wolframalpha.com/input/?i=x%5E2">y = x<sup>2</sup></a>
+        from 0 to 10.
+    </p>
+    <p>
+        <img src="../images/x2.png" />
+        <br />
+        <a target="_blank" href="http://www.wolframalpha.com/input/?i=int%28x%5E2%2C0%2C10%29">Solution</a>
+    </p>
+</section>
+<section class="slide">
+    <h2>Poor man's parallel execution example</h2>
+<p>
+Consider the following code from last week
+<pre><code>
+def f(x):
+    return x**2
+
+def integrate_f(a, b, N):
+    s = 0
+    dx = (b-a)/N
+    for i in xrange(N):
+        s += f(a+i*dx)
+    return s * dx
+</code></pre>
+</p>
+<p>Break down the problem into parallelizable chunks:</p>
+<pre><code>
+((python integrate_main.py 0 5 1000000) &) ; ((python integrate_main.py 5 10 1000000) & )
+</code></pre>
+</section>
+<section class="slide">
+    <h2>the threading module</h2>
+    <p>starting threads is the easy part</p>
+<pre><code>
+import threading
+import time
+
+def func():
+    print "hello from thread %s" % threading.current_thread().name
+    for i in xrange(15):
+        print ".",
+        time.sleep(1)
+
+thread = threading.Thread(target=func, args=())
+thread.start()
+</code></pre>
+<ul>
+    <li>The process will exit when the last non-daemon thread exits.   
+    <li>You can block and wait for a thread to exit with thread.join()   
+</ul>
+</section>
+
+<section class="slide">
+    <h2>Managing thread results</h2>
+    <p>We need a thread safe way of storing results from multiple threads of execution.  That is provided by the Queue module. </p>
+    <p>Queues allow multiple producers and multiple consumers
+    <p>FIFO or LIFO with Queue.LifoQueue
+    <p>Size is a managed, will block consumers if empty and block producers if full
+
+<p><pre><code>
+from Queue import Queue
+q = Queue()
+q.put(37337)
+block = True
+timeout = 2
+print q.get(block, timeout)
+</code></pre></p>
+    <p>
+    <ul>
+        <li><a target="_blank" href="http://docs.python.org/2/library/threading.html">http://docs.python.org/2/library/threading.html</a>
+        <li><a target="_blank" href="http://docs.python.org/2/library/queue.html">http://docs.python.org/2/library/queue.html</a>
+    </ul>
+    </p>
+</section>
+
+<section class="slide">
+	<h3>threading example</h3>
+<p><pre>
+#!/usr/bin/env python
+
+import argparse
+import os
+import sys
+import threading
+import Queue
+
+sys.path.append(os.path.join(os.path.dirname(__file__), ".."))
+from integrate.integrate import integrate, f
+from decorators.decorators import timer
+
+@timer
+def threading_integrate(f, a, b, N, thread_count=2):
+    """break work into two chunks"""
+    N_chunk = int(float(N) / thread_count)
+    dx = float(b-a) / thread_count
+
+    results = Queue.Queue()
+
+    def worker(*args):
+        results.put(integrate(*args))
+
+    threads = []
+    for i in xrange(thread_count):
+        x0 = dx*i
+        x1 = x0 + dx
+        thread = threading.Thread(target=worker, args=(f, x0, x1, N_chunk))
+        thread.start()
+        print "Thread %s started" % thread.name
+        # thread1.join()
+
+    return sum( (results.get() for i in xrange(thread_count) ))
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='integrator')
+    parser.add_argument('a', nargs='?', type=float, default=0.0)
+    parser.add_argument('b', nargs='?', type=float, default=10.0)
+    parser.add_argument('N', nargs='?', type=int, default=10**7)
+    parser.add_argument('thread_count', nargs='?', type=int, default=2)
+
+    args = parser.parse_args()
+    a = args.a
+    b = args.b
+    N = args.N
+    thread_count = args.thread_count
+
+    print "Numerical solution with N=%(N)d : %(x)f" % \
+            {'N': N, 'x': threading_integrate(f, a, b, N, thread_count=thread_count)}
+</pre></p>
+</section>
+
+<section class="slide">
+    <h2>Subclassing Thread</h2>
+    <p>Subclass Thread and override the run method</p>
+<pre><code>
+import threading
+
+class MyThread(threading.Thread):
+    def run(self):
+        print "hello from %s" % threading.current_thread().name
+
+thread = MyThread()
+thread.start()
+</code></pre>
+</section>
+
+<section class="slide">
+    <h2>Locks</h2>
+    <p>Lock objects allow threads to control access to a resource until they're done with it</p>
+<p><pre><code>
+import threading
+import time
+
+lock = threading.Lock()
+
+def f():
+    lock.acquire()
+    print "%s got lock" % threading.current_thread().name
+    time.sleep(1)
+    lock.release()
+
+threading.Thread(target=f).start()
+threading.Thread(target=f).start()
+threading.Thread(target=f).start()
+    
+</code></pre></p>
+<h3>threading.RLock</h3>
+<p>A reentrant lock can be acquired multiple times by the same thread, and must be released by that thread</p>
+
+</section>
+<section class="slide">
+	<h2>multiprocessing</h2>
+
+    <p>multiprocessing provides an API very similar to threading, so the transition is easy</p>
+    <p>use multiprocessing.Process instead of threading.Thread
+<p><pre><code>
+import multiprocessing
+import os
+
+def func():
+    print "hello from process %s" % os.getpid()
+    time.sleep(1)
+
+proc = multiprocessing.Process(target=func, args=())
+proc.start()
+proc = multiprocessing.Process(target=func, args=())
+proc.start()
+</code></pre></p>
+</section>
+
+
+<section class="slide">
+	<h2>Other options</h2>
+    <p>Traditionally, concurency has been achieved through multiple process communication and in-process threads, as we've seen</p>
+    <p>Another strategy is through micro-threads, implemented via coroutines and a scheduler
+    <p>A coroutine is a generalization of a subroutine which allows multiple entry points for suspending and resuming execution
+    <ul>
+        <li><a href="http://dabeaz.com/coroutines/">http://dabeaz.com/coroutines/, A Curious Course on Coroutines and Concurrency</a>
+        <li><a href="http://en.wikipedia.org/wiki/Coroutine">http://en.wikipedia.org/wiki/Coroutine</a>
+    </ul>
+
+</section>
+<section class="slide">
+    <h2>Iterators</h2>
+    <p>An iterator is an object that defines two required methods in order to iterate</p>
+    <ul>
+        <li>__iter__() returns the iterator itself
+        <li>next() returns the next item in the sequence
+    </ul>
+
+<p><pre><code>
+class FibIterator(object):
+
+    def __init__(self):
+        self.data = [0,1,1,2,3,5,8,13,21]
+        self.i = 0
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        if self.i >= len(self.data):
+            raise StopIteration
+
+        value = self.data[self.i]
+        self.i += 1
+        return value
+
+iter = FibIterator()
+for x in iter:
+    print x
+</code></pre></p>
+</section>
+
+<section class="slide">
+    <h2>Generators</h2>
+    <p>Generators are constructs that create iterators</p>
+    <p>They're just functions which utilize the yield keyword to allow a caller to retrieve values in middle of execution
+    <ul>
+        <li><a target="_blank" href="http://docs.python.org/2/tutorial/classes.html#generators">http://docs.python.org/2/tutorial/classes.html#generators</a>
+    </ul>
+<p><pre><code>
+def fiberator(n):
+    values = [0,1]
+    for i in xrange(n):
+        new_value = sum(values)
+        yield values.pop(0)
+        values.append(new_value)
+
+for x in fiberator(20):
+    print x
+</code></pre></p>
+</section>
+
+<section class="slide">
+	<h2>With send(), a generator becomes a coroutine</h2>
+
+<p><pre><code>
+def coroutine(n):
+    try:
+        while True:
+            x = (yield)
+            print n+x
+    except GeneratorExit:
+        pass
+
+targets = [
+ coroutine(10),
+ coroutine(20),
+ coroutine(30),
+]
+
+for target in targets:
+    target.next()
+
+for i in range(5):
+    for target in targets:
+        target.send(i)
+</code></pre></p>
+<p>
+    <a href="http://dabeaz.com/coroutines/Coroutines.pdf">http://dabeaz.com/coroutines/Coroutines.pdf</a>
+</p>
+</section>
+
+<section class="slide">
+	<h2>Packages using coroutines for micro threads</h2>
+    <p>By "jumping" to parallel coroutines, our application can simulate true threads.   Creating the scheduler 
+    which does the jumping is beyond the scope of this class, but look into these packages which handle the dirty
+    work</p>
+    <ul>
+        <li><a href="http://eventlet.net/">http://eventlet.net/</a>
+        <li><a href="https://pypi.python.org/pypi/greenlet">https://pypi.python.org/pypi/greenlet</a>
+        <li><a href="http://www.gevent.org">http://www.gevent.org</a>
+    </ul>
+
+<p><pre><code>
+</code></pre></p>
+</section>
+
+
+<!--
+<section class="slide">
+    <h2>title</h2>
+    <p>text</p>
+</section>
+-->
+
+<section class="slide">
+    <h1>Questions?</h1>
+</section>
+
+<!-- End slides. -->
+
+
+<!-- Begin extension snippets. Add or remove as needed. -->
+
+<!-- deck.navigation snippet -->
+<a href="#" class="deck-prev-link" title="Previous">&#8592;</a>
+<a href="#" class="deck-next-link" title="Next">&#8594;</a>
+
+<!-- deck.status snippet -->
+<p class="deck-status">
+	<span class="deck-status-current"></span>
+	/
+	<span class="deck-status-total"></span>
+</p>
+
+<!-- deck.goto snippet -->
+<form action="." method="get" class="goto-form">
+	<label for="goto-slide">Go to slide:</label>
+	<input type="text" name="slidenum" id="goto-slide" list="goto-datalist">
+	<datalist id="goto-datalist"></datalist>
+	<input type="submit" value="Go">
+</form>
+
+<!-- deck.hash snippet -->
+<a href="." title="Permalink to this slide" class="deck-permalink">#</a>
+
+<!-- End extension snippets. -->
+
+
+<!-- Required JS files. -->
+<script src="jquery-1.7.2.min.js"></script>
+<script src="core/deck.core.js"></script>
+
+<!-- Extension JS files. Add or remove as needed. -->
+<script src="core/deck.core.js"></script>
+<script src="extensions/hash/deck.hash.js"></script>
+<script src="extensions/menu/deck.menu.js"></script>
+<script src="extensions/goto/deck.goto.js"></script>
+<script src="extensions/status/deck.status.js"></script>
+<script src="extensions/navigation/deck.navigation.js"></script>
+<script src="extensions/scale/deck.scale.js"></script>
+
+<!-- Initialize the deck. You can put this in an external file if desired. -->
+<script>
+	$(function() {
+		$.deck('.slide');
+	});
+</script>
+</body>
+</html>
