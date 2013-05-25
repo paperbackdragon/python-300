@@ -4,6 +4,8 @@ Author: Heather Hoaglund-Biron
 
 """
 from mutagen.easyid3 import EasyID3
+from mutagen.mp3 import MP3
+from decimal import Decimal
 import fnmatch
 import os
 
@@ -36,6 +38,25 @@ class TagReader:
                 matches.append(os.path.join(root, filename))
         
         return matches
+    
+    def _formattime(self, time):
+        """
+        Given a floating point number in seconds, returns a string
+        formatted as "MM:SS".
+
+        """
+        #Divide into minutes
+        print time
+        minutes = Decimal(time / 60).quantize(Decimal(".01"), rounding=ROUND_HALF_UP)
+        return minutes
+
+
+        #Split into minute string and second string
+
+
+        #Concatenate
+
+        #return
 
     def _read(self, musicfiles):
         """
@@ -47,12 +68,24 @@ class TagReader:
         for mp3 in musicfiles:
             filedict = {}
             musicfile = EasyID3(mp3)
-            keys = ['title', 'artist']
+            musicaudio = MP3(mp3)
+            keys = ['title', 'artist', 'album', 'tracknumber']
             
             #Store each key, value pair in the file's dictionary
             for key in keys:
-                filedict[key] = ', '.join(musicfile[key])
-            
+                try:
+                    if key == 'tracknumber':
+                        dictkey = 'track'
+                    else:
+                        dictkey = key
+                    filedict[dictkey] = ', '.join(musicfile[key])
+                except KeyError:
+                    pass
+            try:
+                filedict['length'] = self._formattime(musicaudio.info.length)
+            except KeyError:
+                pass
+
             metadata.append(filedict)
         return metadata
     

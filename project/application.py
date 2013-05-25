@@ -19,8 +19,14 @@ class Application(tk.Frame):
         tk.Frame.__init__(self, master)
         self.grid()
         self.create_widgets()
+
+    def start_processes(self):
+        """
+        """
+        
         self.treader = tagreader.TagReader()
         self.dbhelper = dbhelper.DatabaseHelper()
+
 
     def create_widgets(self):
         """
@@ -39,7 +45,7 @@ class Application(tk.Frame):
             self,
             bg='white',
             height=400,
-            width=600
+            width=800
         )
         self.mframe.grid(row=1, column=0, columnspan=4)
         self.mframe.grid_propagate(0)
@@ -49,8 +55,15 @@ class Application(tk.Frame):
         mytk.GridLabel(self.mframe, 1, 'Album')
         mytk.GridLabel(self.mframe, 2, 'Title')
         mytk.GridLabel(self.mframe, 3, 'Length')
+        self.curRow = 0
 
     def import_click(self):
+        #self.curRow += 1
+        #mytk.GridCell(self.mframe, self.curRow, 0, 'Track Name 1')
+        #mytk.GridCell(self.mframe, self.curRow, 1, 'Album Name 1')
+        #mytk.GridCell(self.mframe, self.curRow, 2, 'Song Title 1')
+        #mytk.GridCell(self.mframe, self.curRow, 3, '1:23')
+        self.start_processes()
         print "Importing..."
 
     def clear_click(self):

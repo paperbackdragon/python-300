@@ -1,9 +1,10 @@
 """
-Test class for DatabaseHelper
+Test class for DatabaseHelper and TagReader together
 
 """
 
 import dbhelper
+import tagreader
 
 def write_to_db(dictlist, helper):
     for entry in dictlist:

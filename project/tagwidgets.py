@@ -16,5 +16,25 @@ class GridLabel(tk.Label):
     def __init__(self, master, col, labeltext):
         tk.Label.__init__(self, master=master, text=labeltext)
 
-        self.config(relief='groove', bg='white', width=16, anchor=tk.W)
-        self.grid(row=0, column=col)
+        self.config(
+            relief='flat',
+            bg='white',
+            width=16,
+            anchor=tk.W,
+            font=('Helvetica', '10')
+        )
+        self.grid(row=0, column=col, sticky=tk.W)
+
+class GridCell(tk.Label):
+    def __init__(self, master, row, col, labeltext):
+        tk.Label.__init__(self, master=master, text=labeltext)
+
+        self.config(
+            relief='flat',
+            bg='white',
+            width=16,
+            anchor=tk.W,
+            font=('Helvetica', '6')
+        )
+        self.grid(row=row, column=col, sticky=tk.W)
+

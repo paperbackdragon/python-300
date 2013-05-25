@@ -64,12 +64,22 @@ class DatabaseHelper:
         self.c.execute(insert_text)
         self.conn.commit()
 
-    def read(self, query):
+
+    def read(self):
         """
         Reads the information given in the query, grabs the specified data from 
         the database, and returns it.
 
         """
+        select_text = "SELECT * from songs ORDER BY artist, album, track"
+        
+        self.c.execute(select_text)
+
+        rows = []
+        for row in self.c.fetchall():
+            rows.append(row)
+
+        return rows
 
     def close(self):
         self.conn.close()
