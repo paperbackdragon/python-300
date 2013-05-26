@@ -20,13 +20,57 @@ class Application(tk.Frame):
         self.grid()
         self.create_widgets()
 
+    def import_click(self):
+        print "Importing..."
+        self.start_processes()
+
+    def clear_click(self):
+        print "Clearing..."
+
     def start_processes(self):
         """
         """
-        
-        self.treader = tagreader.TagReader()
-        self.dbhelper = dbhelper.DatabaseHelper()
+        self.import_tags()
+        self.get_tags()
 
+    def import_tags(self):
+        """
+        Uses the treader to read tags from .mp3 files and the dbhelper to 
+        insert them in the database. Runs in a separate process.
+
+        """
+        #Read tags from music folder 
+        treader = tagreader.TagReader()
+        datalist = treader.readtags("../../music/")
+        print("Read %s tags." % len(datalist))
+
+        #Write tags to database
+        writer = dbhelper.DatabaseHelper()
+        for entry in datalist:
+            writer.write(entry)
+        writer.close()
+        print("Done writing tags to database.")
+
+    def get_tags(self):
+        """
+        Uses the dbhelper to query the database for tags and then returns them 
+        in a way that the GUI can use them. Runs in a separate process.
+        
+        """
+        #Read tags from database
+        reader = dbhelper.DatabaseHelper()
+        rows = reader.read()
+        
+        #Display tags in GUI
+        for row in rows:
+            self.curRow += 1
+            mytk.GridCell(self.mframe, self.curRow, 0, 3, row[3])
+            mytk.GridCell(self.mframe, self.curRow, 1, 30, row[0])
+            mytk.GridCell(self.mframe, self.curRow, 2, 20, row[1])
+            mytk.GridCell(self.mframe, self.curRow, 3, 30, row[2])
+            mytk.GridCell(self.mframe, self.curRow, 4, 7, row[4])     
+        reader.close()
+        print("Done reading tags from database.")
 
     def create_widgets(self):
         """
@@ -44,44 +88,19 @@ class Application(tk.Frame):
         self.mframe = tk.Frame(
             self,
             bg='white',
-            height=400,
-            width=800
+            height=600,
+            width=1000
         )
         self.mframe.grid(row=1, column=0, columnspan=4)
         self.mframe.grid_propagate(0)
         
         #Main list labels
-        mytk.GridLabel(self.mframe, 0, 'Track')
-        mytk.GridLabel(self.mframe, 1, 'Album')
-        mytk.GridLabel(self.mframe, 2, 'Title')
-        mytk.GridLabel(self.mframe, 3, 'Length')
+        mytk.GridLabel(self.mframe, 0, 3, '#')
+        mytk.GridLabel(self.mframe, 1, 30, 'Title')
+        mytk.GridLabel(self.mframe, 2, 20, 'Album')
+        mytk.GridLabel(self.mframe, 3, 30, 'Artist')
+        mytk.GridLabel(self.mframe, 4, 7, 'Length')
         self.curRow = 0
-
-    def import_click(self):
-        #self.curRow += 1
-        #mytk.GridCell(self.mframe, self.curRow, 0, 'Track Name 1')
-        #mytk.GridCell(self.mframe, self.curRow, 1, 'Album Name 1')
-        #mytk.GridCell(self.mframe, self.curRow, 2, 'Song Title 1')
-        #mytk.GridCell(self.mframe, self.curRow, 3, '1:23')
-        self.start_processes()
-        print "Importing..."
-
-    def clear_click(self):
-        print "Clearing..."
-
-    def import_tags(self):
-        """
-        Uses the treader to read tags from .mp3 files and the dbhelper to 
-        insert them in the database. Runs in a separate process.
-
-        """
-
-    def get_tags(self):
-        """
-        Uses the dbhelper to query the database for tags and then returns them 
-        in a way that the GUI can use them. Runs in a separate process.
-        
-        """
 
 app = Application()
 app.master.title('Treader')

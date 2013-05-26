@@ -17,26 +17,19 @@ def read_from_db(helper):
         print row
 
 if __name__ == '__main__':
+    #test getting tags
+    treader = tagreader.TagReader()
+    datalist = treader.readtags("../../music/")
+    print("done reading tags")
+
     #test writing
     writer = dbhelper.DatabaseHelper()
-
-    datalist = [{
-        'title': "Song Title",
-        'album': "This Is An Album",
-        'artist': "Oc Topi",
-        'track': "1",
-        'length': "3:50"
-        }]
-
     write_to_db(datalist, writer)
     writer.close()
-    print("done writing")
+    print("done writing to db")
     
     #test reading
     reader = dbhelper.DatabaseHelper()
-    
     read_from_db(reader)
-
     reader.close()
-
-    print("done reading")
+    print("done reading to db")

@@ -5,7 +5,7 @@ Author: Heather Hoaglund-Biron
 """
 from mutagen.easyid3 import EasyID3
 from mutagen.mp3 import MP3
-from decimal import Decimal
+import time
 import fnmatch
 import os
 
@@ -39,25 +39,6 @@ class TagReader:
         
         return matches
     
-    def _formattime(self, time):
-        """
-        Given a floating point number in seconds, returns a string
-        formatted as "MM:SS".
-
-        """
-        #Divide into minutes
-        print time
-        minutes = Decimal(time / 60).quantize(Decimal(".01"), rounding=ROUND_HALF_UP)
-        return minutes
-
-
-        #Split into minute string and second string
-
-
-        #Concatenate
-
-        #return
-
     def _read(self, musicfiles):
         """
         Reads the metadata from the given files and returns a list of 
@@ -73,18 +54,15 @@ class TagReader:
             
             #Store each key, value pair in the file's dictionary
             for key in keys:
-                try:
-                    if key == 'tracknumber':
-                        dictkey = 'track'
-                    else:
-                        dictkey = key
+                if key == 'tracknumber':
+                    dictkey = 'track'
+                    filedict[dictkey] = ', '.join(musicfile[key]).split("/")[0]
+                else:
+                    dictkey = key
                     filedict[dictkey] = ', '.join(musicfile[key])
-                except KeyError:
-                    pass
-            try:
-                filedict['length'] = self._formattime(musicaudio.info.length)
-            except KeyError:
-                pass
+            
+            length_dt = time.gmtime(musicaudio.info.length)
+            filedict['length'] = time.strftime('%M:%S', length_dt)
 
             metadata.append(filedict)
         return metadata

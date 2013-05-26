@@ -38,7 +38,6 @@ class DatabaseHelper:
         Takes the given data and writes it to the database.
 
         """
-        print(data)
         insert_text = "INSERT into songs (title, album"
         columns = ['title', 'album', 'artist', 'track', 'length']
         used = ['title', 'album']
@@ -61,7 +60,10 @@ class DatabaseHelper:
         insert_text += ")"
 
         #Execute command(s) and commit
-        self.c.execute(insert_text)
+        try:
+            self.c.execute(insert_text)
+        except sqlite3.IntegrityError:
+            print "Item already exists in database."
         self.conn.commit()
 
 
