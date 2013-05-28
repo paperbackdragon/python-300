@@ -35,12 +35,14 @@ class DatabaseHelper:
 
     def write(self, data):
         """
-        Takes the given data and writes it to the database.
+        Takes the given song and writes it to the database, returning the
+        primary key. Song title and album name are required.
 
         """
         insert_text = "INSERT into songs (title, album"
         columns = ['title', 'album', 'artist', 'track', 'length']
         used = ['title', 'album']
+        primary_key = {}
         
         #See which tags are in the dictionary (title and album aren't optional)
         for column in columns[2:]:
@@ -56,24 +58,30 @@ class DatabaseHelper:
                 values.append(data[column])
             else:
                 values.append("\"" + data[column] + "\"")
+            if column == "title" or column == "album":
+                primary_key[column] = data[column]
         insert_text += ", ".join(values)
         insert_text += ")"
 
         #Execute command(s) and commit
         try:
             self.c.execute(insert_text)
+            self.conn.commit()
+            print "Writing tag: %s" % data
         except sqlite3.IntegrityError:
+            primary_key = {}
             print "Item already exists in database."
-        self.conn.commit()
 
+        return primary_key
 
-    def read(self):
+    def read(self, key):
         """
         Reads the information given in the query, grabs the specified data from 
         the database, and returns it.
 
         """
-        select_text = "SELECT * from songs ORDER BY artist, album, track"
+        select_text = "SELECT * from songs WHERE title is \"%s\" AND album is "\
+            "\"%s\" ORDER BY artist, album, track" % (key["title"], key["album"])
         
         self.c.execute(select_text)
 
@@ -81,6 +89,7 @@ class DatabaseHelper:
         for row in self.c.fetchall():
             rows.append(row)
 
+        print "Reading tag: %s" % rows
         return rows
 
     def close(self):
