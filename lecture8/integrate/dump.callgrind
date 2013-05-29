@@ -1,0 +1,42 @@
+events: Ticks
+summary: 10484
+fi=integrate.py
+fn=<module> integrate.py:1
+1 0
+
+fi=integrate.py
+fn=integrate integrate.py:4
+4 6772
+cfn=f integrate.py:1
+cfi=integrate.py
+calls=11111110 1
+4 3711
+
+fi=integrate.py
+fn=f integrate.py:1
+1 3711
+
+fi=integrate_main.py
+fn=<genexpr> integrate_main.py:9
+9 0
+
+fi=integrate_main.py
+fn=<module> integrate_main.py:4
+4 0
+cfn=<module> integrate.py:1
+cfi=integrate.py
+calls=1 1
+4 0
+cfn=integrate integrate.py:4
+cfi=integrate.py
+calls=7 4
+4 10484
+cfn=<genexpr> integrate_main.py:9
+cfi=integrate_main.py
+calls=8 9
+4 0
+
+fi=~
+fn=<method 'disable' of '_lsprof.Profiler' objects> ~:0
+0 0
+
