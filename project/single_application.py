@@ -40,7 +40,7 @@ class Application(tk.Frame):
         except OSError:
             print "Database already removed."
 
-        #Remove text from screen (TODO: somehow use <widget>.destroy)
+        #Remove text from screen
         children = [x for x in self.mframe.winfo_children() if isinstance(x, mytk.GridCell)]
         for child in children:
             child.destroy()
@@ -54,7 +54,7 @@ class Application(tk.Frame):
         """
         #Read tags from music folder 
         treader = tagreader.TagReader()
-        datalist = treader.readtags("../../music/")
+        datalist = treader.readtags("../../../music/")
         print("Read %s tags." % len(datalist))
 
         #Write tags to database and alert other process after commit
@@ -114,11 +114,14 @@ class Application(tk.Frame):
         processes.
 
         """
-        self.import_proc = Process(target=self.import_tags)
-        self.getter_proc = Process(target=self.get_tags)
+        #self.import_proc = Process(target=self.import_tags)
+        #self.getter_proc = Process(target=self.get_tags)
 
-        self.import_proc.start()
-        self.getter_proc.start()
+        #self.import_proc.start()
+        #self.getter_proc.start()
+
+        self.import_tags()
+        self.get_tags()
 
         self.update_gui()
 
