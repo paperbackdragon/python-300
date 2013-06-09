@@ -54,7 +54,7 @@ class Application(tk.Frame):
         """
         #Read tags from music folder 
         treader = tagreader.TagReader()
-        datalist = treader.readtags("../../../music/")
+        datalist = treader.readtags("../../music/")
         print("Read %s tags." % len(datalist))
 
         #Write tags to database and alert other process after commit
